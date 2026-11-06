@@ -2,6 +2,10 @@
 
 JavaScript injection for typing algebra answers with the iPad Safari keyboard on Dr Frost Maths.
 
+## Bookmarklet website
+
+Open `index.html` in a browser to use the drag-and-drop bookmarklet page. It generates a bookmarklet from the same fix script and includes iPad instructions.
+
 ## Use
 
 1. Open a Dr Frost Maths algebra question.

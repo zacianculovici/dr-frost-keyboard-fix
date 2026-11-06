@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dr Frost Maths Keyboard Fix</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f4f7fb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(680px, 100%);
+      background: #fff;
+      border: 1px solid #dfe6f0;
+      border-radius: 20px;
+      padding: clamp(24px, 6vw, 48px);
+      box-shadow: 0 16px 45px rgb(34 54 88 / 10%);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #3569d4;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(2rem, 7vw, 3.5rem); line-height: 1.05; }
+    p { line-height: 1.6; }
+    .intro { color: #526078; font-size: 1.08rem; }
+
+    .bookmarklet {
+      display: inline-block;
+      margin: 18px 0 8px;
+      padding: 14px 20px;
+      border-radius: 10px;
+      color: #fff;
+      background: #3569d4;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: grab;
+      box-shadow: 0 7px 15px rgb(53 105 212 / 24%);
+    }
+
+    .bookmarklet:active { cursor: grabbing; }
+    .hint { margin: 0; color: #69758b; font-size: .92rem; }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 14px;
+      border: 1px solid #cbd6e8;
+      border-radius: 8px;
+      color: #263650;
+      background: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover { background: #f3f6fb; }
+
+    section {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e6ebf3;
+    }
+
+    li { margin: 10px 0; line-height: 1.5; }
+    code { padding: 2px 5px; border-radius: 4px; background: #eef2f8; }
+    .warning { color: #69758b; font-size: .92rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">iPad Safari helper</p>
+    <h1>Dr Frost Maths keyboard fix</h1>
+    <p class="intro">
+      Add this bookmarklet to Safari, then tap it on a Dr Frost Maths algebra question
+      to type answers with your iPad keyboard.
+    </p>
+
+    <a id="bookmarklet" class="bookmarklet" href="#">Drag this to your bookmarks bar</a>
+    <p class="hint">On iPad, touch and hold the link, then choose to add it to your bookmarks.</p>
+    <button id="copy" type="button">Copy bookmarklet</button>
+
+    <section>
+      <h2>How to use it</h2>
+      <ol>
+        <li>Add the blue link to your bookmarks.</li>
+        <li>Open an algebra question on <code>drfrost.org</code>.</li>
+        <li>Tap the bookmark and then tap the answer box.</li>
+      </ol>
+      <p class="warning">The bookmarklet only runs on the Dr Frost Maths answer page. Reloading the page removes the fix, so tap the bookmark again.</p>
+      <p><strong>Shortcuts:</strong> type <code>^</code> for superscript, or use <code>Option/Alt + Shift + 6</code> for square root.</p>
+    </section>
+  </main>
+
+  <script>
+    const fix = `(() => {
+  const field = document.querySelector('#expression-answer');
+  const mq = field && window.jQuery?.data(field, 'mathField');
+  const input = field?.querySelector('[tabindex="0"]');
+  if (!field || !mq || !input) {
+    console.error('Dr Frost keyboard fix: MathQuill answer field not found.');
+    return;
+  }
+  if (input.dataset.drFrostKeyboardFix === 'active') {
+    input.focus();
+    mq.focus();
+    return;
+  }
+  input.dataset.drFrostKeyboardFix = 'active';
+  document.querySelector('#virtual-keyboard')?.style.setProperty('display', 'none', 'important');
+  const clickKeyboardButton = (position) => {
+    const button = document.querySelector(
+      \`#keyboard-button-section-lessmain > span:nth-child(\${position}) button\`
+    );
+    if (!button) {
+      console.error(\`Dr Frost keyboard fix: virtual keyboard button \${position} not found.\`);
+      return;
+    }
+    button.click();
+    mq.focus();
+  };
+  input.addEventListener('keydown', (event) => {
+    if (event.altKey && event.shiftKey && (event.key === '6' || event.code === 'Digit6')) {
+      event.preventDefault();
+      event.stopPropagation();
+      clickKeyboardButton(5);
+      return;
+    }
+    if (event.key === '^') {
+      event.preventDefault();
+      event.stopPropagation();
+      clickKeyboardButton(8);
+      return;
+    }
+    if (event.key === 'Backspace') {
+      event.preventDefault();
+      mq.keystroke('Backspace');
+      return;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      mq.keystroke(event.key.replace('Arrow', '').toLowerCase());
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      field.closest('form')?.requestSubmit();
+      return;
+    }
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      mq.write(event.key);
+    }
+  });
+  input.focus();
+  mq.focus();
+})();`;
+
+    const bookmarklet = document.querySelector('#bookmarklet');
+    const href = `javascript:${encodeURIComponent(fix)}`;
+    bookmarklet.href = href;
+
+    document.querySelector('#copy').addEventListener('click', async (event) => {
+      await navigator.clipboard.writeText(href);
+      event.currentTarget.textContent = 'Copied!';
+      setTimeout(() => { event.currentTarget.textContent = 'Copy bookmarklet'; }, 1800);
+    });
+  </script>
+</body>
+</html>
