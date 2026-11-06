@@ -95,7 +95,8 @@
 
     <a id="bookmarklet" class="bookmarklet" href="#">Dr Frost Keyboard Fix</a>
     <p class="hint">On iPad, touch and hold the link, then choose to add it to your bookmarks.</p>
-    <button id="copy" type="button">Copy bookmarklet</button>
+    <button id="copy" type="button" disabled>Copy bookmarklet</button>
+    <p id="status" class="hint" role="status">Loading the latest bookmarklet...</p>
 
     <section>
       <h2>How to use it</h2>
@@ -110,77 +111,36 @@
   </main>
 
   <script>
-    const fix = `(() => {
-  const field = document.querySelector('#expression-answer');
-  const mq = field && window.jQuery?.data(field, 'mathField');
-  const input = field?.querySelector('[tabindex="0"]');
-  if (!field || !mq || !input) {
-    console.error('Dr Frost keyboard fix: MathQuill answer field not found.');
-    return;
-  }
-  if (input.dataset.drFrostKeyboardFix === 'active') {
-    input.focus();
-    mq.focus();
-    return;
-  }
-  input.dataset.drFrostKeyboardFix = 'active';
-  document.querySelector('#virtual-keyboard')?.style.setProperty('display', 'none', 'important');
-  const clickKeyboardButton = (position) => {
-    const button = document.querySelector(
-      \`#keyboard-button-section-lessmain > span:nth-child(\${position}) button\`
-    );
-    if (!button) {
-      console.error(\`Dr Frost keyboard fix: virtual keyboard button \${position} not found.\`);
-      return;
-    }
-    button.click();
-    mq.focus();
-  };
-  input.addEventListener('keydown', (event) => {
-    if (event.altKey && event.shiftKey && (event.key === '6' || event.code === 'Digit6')) {
-      event.preventDefault();
-      event.stopPropagation();
-      clickKeyboardButton(5);
-      return;
-    }
-    if (event.key === '^') {
-      event.preventDefault();
-      event.stopPropagation();
-      clickKeyboardButton(8);
-      return;
-    }
-    if (event.key === 'Backspace') {
-      event.preventDefault();
-      mq.keystroke('Backspace');
-      return;
-    }
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      event.preventDefault();
-      mq.keystroke(event.key.replace('Arrow', '').toLowerCase());
-      return;
-    }
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      field.closest('form')?.requestSubmit();
-      return;
-    }
-    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      event.preventDefault();
-      mq.write(event.key);
-    }
-  });
-  input.focus();
-  mq.focus();
-})();`;
-
     const bookmarklet = document.querySelector('#bookmarklet');
-    const href = `javascript:${encodeURIComponent(fix)}`;
-    bookmarklet.href = href;
+    const copyButton = document.querySelector('#copy');
+    const status = document.querySelector('#status');
+    let href = '';
 
-    document.querySelector('#copy').addEventListener('click', async (event) => {
-      await navigator.clipboard.writeText(href);
-      event.currentTarget.textContent = 'Copied!';
-      setTimeout(() => { event.currentTarget.textContent = 'Copy bookmarklet'; }, 1800);
+    fetch('./dr-frost-keyboard-fix.js', { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.text();
+      })
+      .then((fix) => {
+        href = `javascript:${encodeURIComponent(fix)}`;
+        bookmarklet.href = href;
+        copyButton.disabled = false;
+        status.textContent = 'Bookmarklet ready and synced with the JavaScript file.';
+      })
+      .catch((error) => {
+        console.error('Unable to load the latest bookmarklet:', error);
+        status.textContent = 'Unable to load the bookmarklet. Please refresh and try again.';
+      });
+
+    copyButton.addEventListener('click', async (event) => {
+      try {
+        await navigator.clipboard.writeText(href);
+        event.currentTarget.textContent = 'Copied!';
+        setTimeout(() => { event.currentTarget.textContent = 'Copy bookmarklet'; }, 1800);
+      } catch (error) {
+        console.error('Unable to copy the bookmarklet:', error);
+        status.textContent = 'Copy failed. Drag the blue link to your bookmarks instead.';
+      }
     });
   </script>
 </body>

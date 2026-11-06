@@ -4,7 +4,7 @@ JavaScript injection for typing algebra answers with the iPad Safari keyboard on
 
 ## Bookmarklet website
 
-Open `index.html` in a browser to use the drag-and-drop bookmarklet page. It generates a bookmarklet from the same fix script and includes iPad instructions.
+Open `index.html` in a browser to use the drag-and-drop bookmarklet page. The page fetches `dr-frost-keyboard-fix.js` automatically, so updating that file updates the generated bookmarklet without duplicating the code in the HTML.
 
 ## Use
 
